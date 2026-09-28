@@ -116,10 +116,8 @@ bool extractIPv4(const std::string& str, unsigned long& outAddress, int& outPort
 
             // Accumulate port digits by hand.
             unsigned long portVal = 0;
-            int portDigits = 0;
             while (i < len && isdigit(str[i])) {
                 portVal = portVal * 10 + (str[i] - '0');
-                ++portDigits;
                 ++i;
             }
 
