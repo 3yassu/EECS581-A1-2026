@@ -11,21 +11,20 @@ all: $(TARGET)
 $(TARGET): $(SOURCES)
 	$(CXX) $(CXXFLAGS) -o $(TARGET) $(SOURCES)
 
-# Run the exact sample session from the spec and compare output.
+# Pipe tests.txt into the binary, strip the repeating prompt prefix from every
+# output line, then diff against expected.txt.  A clean run prints nothing and
+# exits 0; any mismatch is shown as a unified diff.
 test: $(TARGET)
-	@echo "--- Running sample test ---"
-	@printf '%s\n' \
-		"connecting to 192.168.1.1 now" \
-		"server=10.0.0.255:8080end" \
-		"192a168.1.1.1" \
-		"192.168.1.1." \
-		"Connection from 192.168.1.1 refused" \
-		"192.168.01.1" \
-		"1.2.3.4:99999" \
-		"12.34.56" \
-		"no number here" \
-		"END" \
-	| ./$(TARGET)
+	@echo "--- Running $(shell wc -l < tests.txt | tr -d ' ') test cases ---"
+	@./$(TARGET) < tests.txt \
+	    | sed "s/^Enter a string (or 'END' to quit): //" \
+	    > /tmp/ipv4_actual.txt
+	@if diff -u expected.txt /tmp/ipv4_actual.txt; then \
+	    echo "All tests passed."; \
+	else \
+	    echo "TESTS FAILED: see diff above (- expected, + actual)"; \
+	    exit 1; \
+	fi
 
 clean:
-	rm -f $(TARGET)
+	rm -f $(TARGET) /tmp/ipv4_actual.txt
