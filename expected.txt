@@ -16,17 +16,17 @@ Extracted IPv4 address: 10.10.10.10 (decimal value: 168430090, port: none)
 Extracted IPv4 address: 192.168.0.1 (decimal value: 3232235521, port: 80)
 Extracted IPv4 address: 10.0.0.1 (decimal value: 167772161, port: none)
 Extracted IPv4 address: 10.0.0.1 (decimal value: 167772161, port: 443)
-Extracted IPv4 address: 1.2.3.4 (decimal value: 16909060, port: none)
+Invalid input: no valid IPv4 address found
 Extracted IPv4 address: 172.16.254.1 (decimal value: 2886794753, port: none)
 Extracted IPv4 address: 8.8.8.8 (decimal value: 134744072, port: none)
 Extracted IPv4 address: 8.8.4.4 (decimal value: 134743044, port: none)
 Extracted IPv4 address: 1.2.3.4 (decimal value: 16909060, port: none)
 Extracted IPv4 address: 1.2.3.4 (decimal value: 16909060, port: none)
-Extracted IPv4 address: 99.1.2.3 (decimal value: 1661010435, port: none)
-Extracted IPv4 address: 2.3.4.5 (decimal value: 33752069, port: none)
-Extracted IPv4 address: 56.1.2.3 (decimal value: 939590147, port: none)
-Extracted IPv4 address: 1.2.3.4 (decimal value: 16909060, port: none)
-Extracted IPv4 address: 1.2.3.4 (decimal value: 16909060, port: none)
+Invalid input: no valid IPv4 address found
+Invalid input: no valid IPv4 address found
+Invalid input: no valid IPv4 address found
+Invalid input: no valid IPv4 address found
+Invalid input: no valid IPv4 address found
 Extracted IPv4 address: 192.168.1.1 (decimal value: 3232235777, port: 65535)
 Invalid input: no valid IPv4 address found
 Invalid input: no valid IPv4 address found
@@ -37,7 +37,7 @@ Invalid input: no valid IPv4 address found
 Extracted IPv4 address: 0.0.0.0 (decimal value: 0, port: 0)
 Invalid input: no valid IPv4 address found
 Invalid input: no valid IPv4 address found
-Extracted IPv4 address: 1.2.3.4 (decimal value: 16909060, port: none)
+Invalid input: no valid IPv4 address found
 Extracted IPv4 address: 10.0.0.1 (decimal value: 167772161, port: none)
 Invalid input: no valid IPv4 address found
 Invalid input: no valid IPv4 address found

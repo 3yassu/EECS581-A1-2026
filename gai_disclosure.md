@@ -79,6 +79,21 @@ Prompt 3:
 Finally, I would like you to seperate the test cases into another file, changine the make test to run the seperate file, ensuring that the output remains consistent. Keep all test cases provided from the sample output, adding another ~50 test cases, I would like half of newly added test cases to be any edge cases that you can find so we can trust the validity of the code
 ```
 
+Prompt 4:
+```
+Running your code I found a major error, given the input 256.1.1.1 I found 56.1.1.1 as I stated it's important to not truncate data to fit. 
+
+The bug seems to stem from this line of code 
+
+        if (!octetOk) {
+            // This candidate failed; restart from start+1.
+            i = start + 1;
+            continue;
+        }
+
+In which you increment by one when you find a failing number, you need to throw the entire candidate out if it has an error.
+```
+
 
 Verification Statement:
 I understand every line of submitted code, I have tested it and it works as intended.

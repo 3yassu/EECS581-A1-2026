@@ -1,6 +1,17 @@
 #include <iostream>
 #include <string>
 
+// Advance i past all contiguous token characters (digits, '.', ':').
+// Called on any parse failure so the entire bad token is discarded rather
+// than retried character-by-character, which would allow truncated matches
+// like "56.1.1.1" being found inside "256.1.1.1".
+static void skipToken(const std::string& str, int& i)
+{
+    int len = static_cast<int>(str.size());
+    while (i < len && (isdigit(str[i]) || str[i] == '.' || str[i] == ':'))
+        ++i;
+}
+
 // Returns true if a valid address was found, false otherwise.
 // On success: outAddress holds the 32-bit value,
 // and outPort holds the port number, or -1 if no port was present.
@@ -12,20 +23,17 @@ bool extractIPv4(const std::string& str, unsigned long& outAddress, int& outPort
 
     int len = static_cast<int>(str.size());
 
-    // Try every position in the string as a candidate start.
+    // Try each token in the string.  A token is a maximal run of digits,
+    // '.', and ':'.  Non-token characters act as separators between tokens.
+    // On any parse failure the remainder of the current token is skipped so
+    // we never extract a valid address that is a suffix of a longer numeric run.
     int i = 0;
     while (i < len) {
-        // A token character is a digit, '.', or ':'.
-        // Skip non-token characters immediately.
+        // Skip non-token characters.
         if (!isdigit(str[i]) && str[i] != '.' && str[i] != ':') {
             ++i;
             continue;
         }
-
-        // Attempt to parse an IPv4 address (with optional port) starting at i.
-        // The token runs while we only see digits, '.', ':'.
-        // We record where this candidate starts so we can advance by 1 on failure.
-        int start = i;
 
         // --- Parse four octets ---
         unsigned long octets[4] = {0, 0, 0, 0};
@@ -50,8 +58,6 @@ bool extractIPv4(const std::string& str, unsigned long& outAddress, int& outPort
             // Reject leading zeros (e.g. "01").
             // A single '0' is fine; two or more digits starting with '0' is not.
             if (digitCount > 1) {
-                // The first digit of this octet was str[i - digitCount].
-                // If it was '0' the whole run has a leading zero.
                 char firstDigit = str[i - digitCount];
                 if (firstDigit == '0') {
                     octetOk = false;
@@ -69,7 +75,6 @@ bool extractIPv4(const std::string& str, unsigned long& outAddress, int& outPort
 
             // After the last octet we DON'T require a dot.
             if (o < 3) {
-                // Expect a dot separator.
                 if (i >= len || str[i] != '.') {
                     octetOk = false;
                     break;
@@ -79,8 +84,8 @@ bool extractIPv4(const std::string& str, unsigned long& outAddress, int& outPort
         }
 
         if (!octetOk) {
-            // This candidate failed; restart from start+1.
-            i = start + 1;
+            // Discard the rest of this token; never back up to try a suffix.
+            skipToken(str, i);
             continue;
         }
 
@@ -89,28 +94,25 @@ bool extractIPv4(const std::string& str, unsigned long& outAddress, int& outPort
         //   (a) end-of-string / non-token character  → no port
         //   (b) ':' followed by a valid port number, then end-of-string / non-token char
         //
-        // Invalid endings (reject this candidate):
+        // Invalid endings (reject whole token):
         //   '.' → stray period immediately after the 4th octet
         //   ':' not followed by valid port digits
-        //   any token character that would make the matched address part of a longer token
+        //   port out of range, or port followed by more token characters
 
-        // Check what comes immediately after the address.
+        // Stray period after 4th octet → longer run, discard.
         if (i < len && str[i] == '.') {
-            // Stray period — this is a longer run; reject.
-            i = start + 1;
+            skipToken(str, i);
             continue;
         }
 
         int port = -1;
 
         if (i < len && str[i] == ':') {
-            // Must be followed by at least one digit.
-            int colonPos = i;
             ++i; // skip ':'
 
             if (i >= len || !isdigit(str[i])) {
-                // Colon with no digit after → reject candidate.
-                i = start + 1;
+                // Colon with no digit → discard token.
+                skipToken(str, i);
                 continue;
             }
 
@@ -123,30 +125,24 @@ bool extractIPv4(const std::string& str, unsigned long& outAddress, int& outPort
 
             // Port must be 0–65535.
             if (portVal > 65535) {
-                i = start + 1;
+                skipToken(str, i);
                 continue;
             }
 
-            // After the port, the next character must NOT be a token character
-            // that would extend this token (digit, '.', or ':').
+            // Port must not be followed by more token characters.
             if (i < len && (isdigit(str[i]) || str[i] == '.' || str[i] == ':')) {
-                // Something is still attached — reject.
-                i = start + 1;
+                skipToken(str, i);
                 continue;
             }
 
             port = static_cast<int>(portVal);
 
-            // Also reject a second colon (caught above because after port digits
-            // another ':' is a token char and we'd reject, but be explicit).
-            (void)colonPos; // already consumed
         } else if (i < len && (isdigit(str[i]) || str[i] == ':')) {
-            // A digit or colon directly after the 4th octet without a separator
-            // means this isn't a clean address boundary.
-            i = start + 1;
+            // Digit or colon directly after 4th octet → longer run, discard.
+            skipToken(str, i);
             continue;
         }
-        // If str[i] is anything else (non-token char or end-of-string), we're good.
+        // Anything else (non-token char or end-of-string) is a clean boundary.
 
         // --- Success: build the 32-bit address ---
         unsigned long addr =  (octets[0] << 24)
